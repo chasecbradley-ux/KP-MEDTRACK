@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MedTrack">
+<meta name="theme-color" content="#c2185b">
+<title>MedTrack</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23c2185b'/%3E%3Ctext x='90' y='120' text-anchor='middle' font-size='90' font-family='serif'%3E💊%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff0f5;
+    --surface: #ffffff;
+    --surface2: #fce4ee;
+    --border: #f4b8d0;
+    --text: #3a1a2a;
+    --text-muted: #b07090;
+    --accent: #c2185b;
+    --accent-dark: #a31450;
+    --red: #6a1039;
+    --radius: 14px;
+    --shadow: 0 2px 16px rgba(194,24,91,0.10);
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #c2185b, #e91e8c);
+    color: white;
+    padding: calc(14px + var(--sat)) 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(194,24,91,0.25);
+  }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; max-width: 700px; margin: 0 auto; width: 100%; }
+  header h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; letter-spacing: -0.4px; }
+  header h1 span { color: #ffb3d1; }
+  .stats-row { display: flex; gap: 7px; }
+  .stat-pill {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 3px 9px;
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    color: rgba(255,255,255,0.8);
+    white-space: nowrap;
+  }
+  .stat-pill strong { color: white; }
+
+  /* INSTALL BANNER */
+  #installBanner {
+    display: none;
+    background: #fff0f5;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  #installBanner.show { display: flex; }
+  #installBanner strong { color: var(--accent); }
+  #installBanner .dismiss { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.2rem; line-height: 1; }
+
+  /* TOOLBAR */
+  .toolbar {
+    padding: 10px 16px;
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: calc(54px + var(--sat));
+    z-index: 90;
+  }
+  .toolbar-inner { display: flex; gap: 10px; width: 100%; max-width: 700px; margin: 0 auto; align-items: center; }
+  .search-wrap { position: relative; flex: 1; }
+  .search-wrap input {
+    width: 100%;
+    padding: 10px 14px 10px 36px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    outline: none;
+    -webkit-appearance: none;
+    color: var(--text);
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; opacity: 0.35; pointer-events: none; }
+  select {
+    padding: 10px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: calc(24px + var(--sab));
+    right: calc(20px + var(--sar));
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c2185b, #e91e8c);
+    color: white;
+    font-size: 1.8rem;
+    border: none;
+    box-shadow: 0 4px 20px rgba(194,24,91,0.5);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 150;
+    transition: transform 0.15s, box-shadow 0.15s;
+    line-height: 1;
+  }
+  .fab:active { transform: scale(0.92); box-shadow: 0 2px 10px rgba(194,24,91,0.3); }
+
+  /* MAIN */
+  main { flex: 1; padding: 16px 16px calc(96px + var(--sab)); max-width: 700px; width: 100%; margin: 0 auto; }
+  .grid { display: flex; flex-direction: column; gap: 14px; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: fadeUp 0.25s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .card-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+  }
+  .device-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
+  .device-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+  .status-badge {
+    flex-shrink: 0; padding: 4px 10px; border-radius: 20px;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .status-pending  { background: #fff0f5; color: #880e4f; border: 1px solid #f4b8d0; }
+  .status-active   { background: #fce4ee; color: #c2185b; }
+  .status-used     { background: #fce4ee; color: #ad1457; }
+  .status-returned { background: var(--surface2); color: var(--text-muted); }
+
+  .card-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 7px; }
+  .info-row { display: flex; align-items: baseline; gap: 8px; font-size: 0.87rem; }
+  .info-label {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;
+    min-width: 76px; flex-shrink: 0;
+  }
+  .info-value { color: var(--text); font-weight: 500; }
+  .info-value.pink { color: var(--accent); }
+  .card-footer {
+    padding: 10px 16px; background: #fff7fa;
+    border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end;
+  }
+
+  /* BUTTONS */
+  .btn {
+    padding: 9px 18px; border: none; border-radius: 10px;
+    font-size: 0.87rem; font-family: 'DM Sans', sans-serif; font-weight: 500;
+    cursor: pointer; transition: all 0.12s; -webkit-appearance: none;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn-primary  { background: var(--accent); color: white; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-danger   { background: var(--red); color: white; }
+  .btn-sm       { padding: 7px 13px; font-size: 0.82rem; }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  .empty-icon  { font-size: 3rem; margin-bottom: 14px; }
+  .empty-state p { font-size: 0.93rem; line-height: 1.7; }
+
+  /* MODAL — bottom sheet */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(58,26,42,0.5);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    z-index: 200; display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border-radius: 22px 22px 0 0;
+    width: 100%; max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    padding-bottom: var(--sab);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 4px; margin: 10px auto 0; }
+  .modal-header {
+    background: linear-gradient(135deg, #c2185b, #e91e8c); color: white;
+    padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px;
+  }
+  .modal-header h2 { font-family: 'Playfair Display', serif; font-size: 1.1rem; }
+  .modal-close {
+    background: rgba(255,255,255,0.2); border: none; color: white;
+    width: 30px; height: 30px; border-radius: 50%; font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-body { padding: 20px 20px 8px; display: flex; flex-direction: column; gap: 14px; }
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  .field-group label {
+    font-size: 0.72rem; font-family: 'DM Mono', monospace;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+  }
+  .field-group input, .field-group select, .field-group textarea {
+    padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 12px;
+    font-size: 1rem; font-family: 'DM Sans', sans-serif; background: var(--bg);
+    outline: none; -webkit-appearance: none; color: var(--text); transition: border-color 0.2s;
+  }
+  .field-group input:focus, .field-group select:focus, .field-group textarea:focus { border-color: var(--accent); }
+  .field-group textarea { resize: none; height: 72px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer {
+    padding: 14px 20px calc(14px + var(--sab));
+    border-top: 1px solid var(--border); display: flex; gap: 10px;
+  }
+  .modal-footer .btn { flex: 1; padding: 14px; font-size: 0.95rem; border-radius: 12px; }
+
+  @media (min-width: 600px) {
+    .modal-overlay { align-items: center; }
+    .modal { border-radius: 20px; max-width: 520px; margin: 0 auto; transform: translateY(20px) scale(0.97); padding-bottom: 0; }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-handle { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>Med<span>Track</span> 💊</h1>
+    <div class="stats-row">
+      <div class="stat-pill" id="stat-total"><strong>0</strong> Total</div>
+      <div class="stat-pill" id="stat-active"><strong>0</strong> Active</div>
+      <div class="stat-pill" id="stat-pending"><strong>0</strong> Pending</div>
+    </div>
+  </div>
+</header>
+
+<div id="installBanner">
+  <span>📲 <strong>Install:</strong> Tap Share → "Add to Home Screen" in Safari</span>
+  <button class="dismiss" onclick="this.parentElement.classList.remove('show');localStorage.setItem('banner-dismissed','1')">×</button>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="search" id="searchInput" placeholder="Search device, surgeon, hospital…" oninput="renderCards()" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <select id="filterStatus" onchange="renderCards()">
+      <option value="">All</option>
+      <option value="pending">Pending</option>
+      <option value="active">Active</option>
+      <option value="used">Used</option>
+      <option value="returned">Returned</option>
+    </select>
+  </div>
+</div>
+
+<main>
+  <div class="grid" id="cardsGrid"></div>
+</main>
+
+<button class="fab" onclick="openModal()" aria-label="Add device">＋</button>
+
+<!-- BOTTOM SHEET MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Device / Tray</h2>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Device / Tray Name *</label>
+        <input type="text" id="f-name" placeholder="e.g. Orthopaedic Hip Tray A3" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Device ID / Lot #</label>
+          <input type="text" id="f-id" placeholder="LOT-20240215" autocomplete="off">
+        </div>
+        <div class="field-group">
+          <label>Type</label>
+          <select id="f-type">
+            <option value="Tray">Tray</option>
+            <option value="Implant">Implant</option>
+            <option value="Instrument Set">Instrument Set</option>
+            <option value="Trial Kit">Trial Kit</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Hospital / Clinic *</label>
+        <input type="text" id="f-hospital" placeholder="e.g. St. Mary's Medical" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label>Surgeon *</label>
+        <input type="text" id="f-surgeon" placeholder="e.g. Dr. J. Smith" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Drop-Off Date *</label>
+          <input type="date" id="f-dropoff">
+        </div>
+        <div class="field-group">
+          <label>Date Used</label>
+          <input type="date" id="f-used">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Return Date</label>
+          <input type="date" id="f-returned">
+        </div>
+        <div class="field-group">
+          <label>Status</label>
+          <select id="f-status">
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="used">Used</option>
+            <option value="returned">Returned</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Any additional notes…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDevice()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let devices = JSON.parse(localStorage.getItem('medtrack-devices') || '[]');
+  let editingId = null;
+
+  // Show install banner in Safari on iOS (not already in standalone/app mode)
+  const isIOS = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+  const isStandalone = window.navigator.standalone;
+  if (isIOS && !isStandalone && !localStorage.getItem('banner-dismissed')) {
+    document.getElementById('installBanner').classList.add('show');
+  }
+
+  // Inline service worker for offline support
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+      const CACHE='medtrack-v1';
+      self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.add('/'))));
+      self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+        const clone=res.clone();
+        caches.open(CACHE).then(c=>c.put(e.request,clone));
+        return res;
+      }))));
+    `;
+    const blob = new Blob([swCode], { type: 'application/javascript' });
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+  }
+
+  function save() {
+    localStorage.setItem('medtrack-devices', JSON.stringify(devices));
+    updateStats();
+    renderCards();
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').innerHTML   = `<strong>${devices.length}</strong> Total`;
+    document.getElementById('stat-active').innerHTML  = `<strong>${devices.filter(d=>d.status==='active').length}</strong> Active`;
+    document.getElementById('stat-pending').innerHTML = `<strong>${devices.filter(d=>d.status==='pending').length}</strong> Pending`;
+  }
+
+  function openModal(id=null) {
+    editingId = id;
+    document.getElementById('modalTitle').textContent = id ? 'Edit Device / Tray' : 'Add Device / Tray';
+    if (id) {
+      const d = devices.find(x=>x.id===id);
+      document.getElementById('f-name').value     = d.name||'';
+      document.getElementById('f-id').value       = d.lotId||'';
+      document.getElementById('f-type').value     = d.type||'Tray';
+      document.getElementById('f-hospital').value = d.hospital||'';
+      document.getElementById('f-surgeon').value  = d.surgeon||'';
+      document.getElementById('f-dropoff').value  = d.dropoff||'';
+      document.getElementById('f-used').value     = d.used||'';
+      document.getElementById('f-returned').value = d.returned||'';
+      document.getElementById('f-status').value   = d.status||'pending';
+      document.getElementById('f-notes').value    = d.notes||'';
+    } else {
+      ['f-name','f-id','f-hospital','f-surgeon','f-used','f-returned','f-notes'].forEach(f=>document.getElementById(f).value='');
+      document.getElementById('f-type').value   = 'Tray';
+      document.getElementById('f-status').value = 'pending';
+      document.getElementById('f-dropoff').value = new Date().toISOString().split('T')[0];
+    }
+    document.getElementById('modalOverlay').classList.add('open');
+    document.getElementById('modalBox').scrollTop = 0;
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    editingId = null;
+  }
+
+  function saveDevice() {
+    const name     = document.getElementById('f-name').value.trim();
+    const hospital = document.getElementById('f-hospital').value.trim();
+    const surgeon  = document.getElementById('f-surgeon').value.trim();
+    const dropoff  = document.getElementById('f-dropoff').value;
+    if (!name||!hospital||!surgeon||!dropoff) {
+      alert('Please fill in: Name, Hospital, Surgeon, and Drop-Off Date.');
+      return;
+    }
+    const data = {
+      id: editingId||Date.now().toString(),
+      name, hospital, surgeon, dropoff,
+      lotId:    document.getElementById('f-id').value.trim(),
+      type:     document.getElementById('f-type').value,
+      used:     document.getElementById('f-used').value,
+      returned: document.getElementById('f-returned').value,
+      status:   document.getElementById('f-status').value,
+      notes:    document.getElementById('f-notes').value.trim(),
+    };
+    if (editingId) {
+      devices[devices.findIndex(x=>x.id===editingId)] = data;
+    } else {
+      devices.unshift(data);
+    }
+    save();
+    closeModal();
+  }
+
+  function deleteDevice(id) {
+    if (!confirm('Delete this entry?')) return;
+    devices = devices.filter(x=>x.id!==id);
+    save();
+  }
+
+  function fmt(s) {
+    if (!s) return '—';
+    const [y,m,d] = s.split('-');
+    return `${m}/${d}/${y}`;
+  }
+
+  function renderCards() {
+    const q  = document.getElementById('searchInput').value.toLowerCase();
+    const fs = document.getElementById('filterStatus').value;
+    const grid = document.getElementById('cardsGrid');
+    const filtered = devices.filter(d => {
+      const match = !q || [d.name,d.surgeon,d.hospital,d.lotId,d.type,d.notes].some(v=>v&&v.toLowerCase().includes(q));
+      return match && (!fs||d.status===fs);
+    });
+    if (!filtered.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><p>${devices.length===0?'No devices tracked yet.<br>Tap <strong>＋</strong> to add your first one!':'No devices match your search.'}</p></div>`;
+      return;
+    }
+    const labels  = {pending:'Pending',active:'Active',used:'Used',returned:'Returned'};
+    const classes = {pending:'status-pending',active:'status-active',used:'status-used',returned:'status-returned'};
+    grid.innerHTML = filtered.map((d,i) => `
+      <div class="card" style="animation-delay:${i*0.04}s">
+        <div class="card-header">
+          <div>
+            <div class="device-name">${d.name}</div>
+            <div class="device-id">${d.type}${d.lotId?' · '+d.lotId:''}</div>
+          </div>
+          <span class="status-badge ${classes[d.status]||'status-pending'}">${labels[d.status]||d.status}</span>
+        </div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">Hospital</span><span class="info-value pink">${d.hospital}</span></div>
+          <div class="info-row"><span class="info-label">Surgeon</span><span class="info-value">${d.surgeon}</span></div>
+          <div class="info-row"><span class="info-label">Drop-Off</span><span class="info-value">${fmt(d.dropoff)}</span></div>
+          <div class="info-row"><span class="info-label">Date Used</span><span class="info-value">${fmt(d.used)}</span></div>
+          <div class="info-row"><span class="info-label">Returned</span><span class="info-value">${fmt(d.returned)}</span></div>
+          ${d.notes?`<div class="info-row"><span class="info-label">Notes</span><span class="info-value" style="font-weight:400;color:var(--text-muted);font-size:0.83rem">${d.notes}</span></div>`:''}
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary btn-sm" onclick="openModal('${d.id}')">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteDevice('${d.id}')">Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target===this) closeModal();
+  });
+
+  updateStats();
+  renderCards();
+</script>
+</body>
+</html>
